@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#a3213f">
+<title>Sessão a Dois</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: uma coluna estreita tipo "bilheteria" — cabeçalho com placar do casal, abas por status, pilha de ingressos com capa */
+:root{
+  --bg:#f6f2f3; --surface:#ffffff; --surface-2:#efe8ea; --ink:#2a1c22; --muted:#7a6870; --line:#e2d7db;
+  --accent:#a3213f; --accent-ink:#ffffff; --accent-soft:#f6dde3;
+  --filme:#a3213f; --serie:#1f6f78; --anime:#b5651d;
+  --f-display:"Young Serif",Georgia,"Times New Roman",serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:12px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#171014; --surface:#22181d; --surface-2:#2c2026; --ink:#f3e9ec; --muted:#ad9aa2; --line:#3a2b32;
+  --accent:#e2557a; --accent-ink:#1a0e12; --accent-soft:#3d1d27;
+  --filme:#e2557a; --serie:#4fb3bd; --anime:#e09a52; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+img{max-width:100%}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:20px 60px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,7vw,40px);line-height:1;margin:0}
+.sub{color:var(--muted);margin:6px 0 0;font-size:14px}
+.sub b{color:var(--ink);font-weight:600}
+button,select,input,textarea{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:6px 10px}
+.btn.ghost:hover{color:var(--ink);background:var(--surface-2)}
+.btn.danger{color:var(--accent)}
+.btn:disabled{opacity:.6;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.score{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.score div{background:var(--surface);padding:12px 14px;min-width:0}
+.score .n{font-family:var(--f-display);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.score .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+@media (max-width:520px){.score{grid-template-columns:repeat(2,1fr)}}
+
+.bar{display:flex;flex-direction:column;gap:10px}
+.tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:999px;width:max-content;max-width:100%;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:7px 14px;border-radius:999px;cursor:pointer;font-weight:600;color:var(--muted);white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs .c{font-family:var(--f-mono);font-size:12px;margin-left:4px;opacity:.7}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.search{flex:1;min-width:150px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px}
+select.sort{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 10px;font-size:13px}
+
+.list{display:flex;flex-direction:column;gap:10px}
+.ticket{display:grid;grid-template-columns:84px 1fr;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media (max-width:420px){.ticket{grid-template-columns:68px 1fr}}
+.ticket.filme,.sug.filme,.poster.filme{--kind:var(--filme)} .ticket.serie,.sug.serie,.poster.serie{--kind:var(--serie)} .ticket.anime,.sug.anime,.poster.anime{--kind:var(--anime)}
+.poster{position:relative;background:var(--surface-2);border-right:3px solid var(--kind);aspect-ratio:2/3;align-self:start;overflow:hidden}
+.poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-size:26px;color:var(--kind);
+  background:linear-gradient(160deg,color-mix(in srgb,var(--kind) 22%,var(--surface-2)),var(--surface-2) 70%)}
+.ticket .body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.tt{font-family:var(--f-display);font-weight:400;font-size:19px;line-height:1.2;margin:0;overflow-wrap:anywhere}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.kind{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--kind)}
+.mono{font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.avg{flex:none;text-align:center;border-left:1px dashed var(--line);padding-left:12px}
+.avg .n{font-family:var(--f-display);font-size:24px;line-height:1}
+.avg .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.rates{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
+.rates b{font-family:var(--f-mono);font-weight:500}
+.note{font-size:14px;background:var(--surface-2);border-radius:8px;padding:6px 10px;margin:0;overflow-wrap:anywhere}
+.prog{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.step{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.step button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-weight:700}
+.step button:hover{background:var(--surface-2)}
+.step span{padding:0 6px;font-family:var(--f-mono);font-size:13px;min-width:56px;text-align:center}
+.actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.confirm{display:flex;gap:6px;align-items:center;font-size:13px;flex-wrap:wrap}
+.lbl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:28px 20px;text-align:center;color:var(--muted)}
+.empty strong{display:block;font-family:var(--f-display);font-weight:400;font-size:20px;color:var(--ink);margin-bottom:6px}
+.notice{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:8px 12px}
+footer{font-size:12px;color:var(--muted);text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+footer a{color:inherit}
+
+/* login */
+.login{max-width:360px;margin:12vh auto 0;padding-inline:16px;display:flex;flex-direction:column;gap:14px}
+.login h1{font-size:36px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;padding:11px 14px}
+.login-sec{display:flex;flex-direction:column;gap:12px}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.or::before,.or::after{content:"";flex:1;border-top:1px solid var(--line)}
+.hbtns{display:flex;gap:8px}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline}
+.mem{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.mem li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:4px}
+.inv{display:flex;gap:8px}
+.inv input{flex:1;min-width:0;font-family:var(--f-mono);font-size:12.5px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
+
+/* painel de edição */
+.sheet{position:fixed;inset:0;background:rgba(20,10,14,.45);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+@media (min-width:640px){.sheet{align-items:center}}
+.panel{background:var(--surface);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+@media (min-width:640px){.panel{border-radius:18px}}
+.panel h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px;width:100%}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px;cursor:pointer;font-weight:600;min-width:80px}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.panel .foot{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.err{color:var(--accent);font-size:13px;margin:0}
+.picked{display:flex;gap:12px;align-items:center}
+.picked .poster{width:56px;flex:none;border-radius:6px;border-right:0;outline:1px solid var(--line)}
+.picked .info{font-size:13px;color:var(--muted);min-width:0}
+
+/* autocomplete */
+.ac{position:relative}
+.sugs{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.16);z-index:5;max-height:340px;overflow-y:auto}
+.sug{display:flex;gap:10px;align-items:center;padding:7px 10px;cursor:pointer;border:0;background:transparent;width:100%;text-align:left}
+.sug:hover,.sug[aria-selected="true"]{background:var(--surface-2)}
+.sug .poster{width:34px;flex:none;border-radius:4px;border-right:0}
+.sug .ph{font-size:13px}
+.sug .st{font-weight:600;overflow-wrap:anywhere}
+.sug .so{color:var(--muted);font-size:12.5px}
+.sug .sk{margin-left:auto;flex:none;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--kind)}
+.sugs .hint{padding:9px 12px;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:no-preference){.ticket{animation:in .25s ease-out both}@keyframes in{from{transform:translateY(4px);opacity:.6}}}
+</style>
+</head>
+<body>
+
+<!-- tela de login -->
+<div class="login" id="loginView" hidden>
+  <h1>Sessão a Dois</h1>
+  <p class="sub" style="margin:0" id="lSub">Entre com a sua conta do Google.</p>
+  <p class="err" id="lErr" hidden></p>
+  <button class="btn primary gbtn" id="lBtn" type="button">
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+    Entrar com Google
+  </button>
+</div>
+
+<!-- primeira vez: criar lista ou aceitar convite -->
+<div class="login" id="startView" hidden>
+  <h1>Sessão a Dois</h1>
+  <div class="field"><label for="s-me">Seu nome</label><input id="s-me" maxlength="40" autocomplete="given-name"></div>
+  <div class="login-sec" id="joinBox" hidden>
+    <p class="sub" style="margin:0" id="jText"></p>
+    <button class="btn primary" type="button" id="jBtn">Entrar na lista</button>
+    <button class="btn ghost" type="button" id="jNo">Agora não</button>
+  </div>
+  <div class="login-sec" id="createBox">
+    <p class="sub" style="margin:0">Crie uma lista e depois mande o convite para quem assiste com você.</p>
+    <div class="field"><label for="s-list">Nome da lista</label><input id="s-list" maxlength="60" placeholder="Ex.: Lucas &amp; Ana"></div>
+    <button class="btn primary" type="button" id="cBtn">Criar lista</button>
+    <div class="or">ou</div>
+    <div class="field"><label for="s-code">Recebeu um convite?</label><input id="s-code" maxlength="300" placeholder="Cole o link ou o código"></div>
+    <button class="btn" type="button" id="cJoin">Entrar com convite</button>
+  </div>
+  <p class="err" id="sErr" hidden></p>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn ghost" type="button" id="sBack" hidden>Voltar para minhas listas</button><button class="btn ghost" type="button" id="sOut">Sair</button></div>
+</div>
+
+<div class="wrap" id="appView" hidden>
+  <header>
+    <div style="min-width:0">
+      <h1 id="hName">Sessão a Dois</h1>
+      <p class="sub" id="hSub"></p>
+    </div>
+    <div class="hbtns">
+      <button class="btn" id="btnList">Lista e convite</button>
+      <button class="btn primary" id="btnAdd">+ Adicionar</button>
+    </div>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+  <section class="score" id="score" aria-label="Resumo"></section>
+
+  <div class="bar">
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-s="vendo">Assistindo<span class="c" id="c-vendo"></span></button>
+      <button role="tab" data-s="quero">Quero ver<span class="c" id="c-quero"></span></button>
+      <button role="tab" data-s="visto">Já vimos<span class="c" id="c-visto"></span></button>
+    </div>
+    <div class="filters">
+      <button class="chip" data-k="todos">Todos</button>
+      <button class="chip" data-k="filme">Filmes</button>
+      <button class="chip" data-k="serie">Séries</button>
+      <button class="chip" data-k="anime">Animes</button>
+      <input class="search" id="q" type="search" placeholder="Buscar na lista…" aria-label="Buscar na lista">
+      <select class="sort" id="sort" aria-label="Ordenar">
+        <option value="recent">Mais recentes</option>
+        <option value="rating">Maior nota</option>
+        <option value="az">A–Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <footer>
+    <button class="btn ghost" id="btnOut">Sair</button>
+    <span>Dados e capas: <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>. Este app usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.</span>
+  </footer>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <form class="panel" id="form" novalidate>
+    <h2 id="fTitle">Adicionar título</h2>
+    <div class="field ac"><label for="f-title">Título</label>
+      <input id="f-title" required placeholder="Comece a digitar… ex.: Your Name" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="sugs" aria-expanded="false">
+      <div class="sugs" id="sugs" role="listbox" hidden></div>
+    </div>
+    <div class="picked" id="picked" hidden>
+      <div class="poster" id="pPoster"></div>
+      <div class="info" id="pInfo"></div>
+      <button type="button" class="btn ghost" id="pClear" style="margin-left:auto">Desvincular</button>
+    </div>
+    <div class="field"><span class="lbl">Tipo</span>
+      <div class="seg" id="f-kind"><button type="button" data-v="filme">Filme</button><button type="button" data-v="serie">Série</button><button type="button" data-v="anime">Anime</button></div></div>
+    <div class="field"><span class="lbl">Status</span>
+      <div class="seg" id="f-status"><button type="button" data-v="quero">Quero ver</button><button type="button" data-v="vendo">Assistindo</button><button type="button" data-v="visto">Já vimos</button></div></div>
+    <div class="row">
+      <div class="field"><label for="f-year">Ano</label><input id="f-year" type="number" inputmode="numeric" min="1900" max="2100"></div>
+      <div class="field" data-ep><label for="f-season">Temporada</label><input id="f-season" type="number" min="1" inputmode="numeric"></div>
+      <div class="field" data-ep><label for="f-ep">Episódio</label><input id="f-ep" type="number" min="0" inputmode="numeric"></div>
+    </div>
+    <div class="row" data-done>
+      <div class="field"><label for="f-rMe">Sua nota</label><select id="f-rMe"></select></div>
+      <div class="field"><label for="f-date">Terminamos em</label><input id="f-date" type="date"></div>
+    </div>
+    <p class="sub" id="fOthers" data-done style="margin:0"></p>
+    <div class="field"><label for="f-note">Comentário</label><textarea id="f-note" rows="2" placeholder="Choramos no final…"></textarea></div>
+    <p class="err" id="fErr" hidden></p>
+    <div class="foot"><button type="button" class="btn" id="fCancel">Cancelar</button><button type="submit" class="btn primary">Salvar</button></div>
+  </form>
+</div>
+
+<div class="sheet" id="listSheet" hidden>
+  <div class="panel" role="dialog" aria-labelledby="lsTitle">
+    <h2 id="lsTitle">Lista e convite</h2>
+    <div id="lsBody" style="display:flex;flex-direction:column;gap:14px"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.79.0/dist/umd/supabase.js"></script>
+<script>
+(function(){
+const CFG=window.APP_CONFIG||{};
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const KIND={filme:"Filme",serie:"Série",anime:"Anime"};
+const IMG="https://image.tmdb.org/t/p/";
+const sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY);
+
+let items=[], tab="vendo", kindF="todos", q="", sort="recent", editing=null, confirmDel=null, firstLoad=true;
+let me=null, lists=[], cur=null, members=[], confirmKick=null, confirmLeave=false;
+try{tab=localStorage.getItem("sad-tab")||tab}catch(e){}
+const saveTab=()=>{try{localStorage.setItem("sad-tab",tab)}catch(e){}};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today=()=>new Date().toLocaleDateString("sv-SE");
+const fmtDate=d=>{if(!d)return"";const[y,m,dd]=d.split("-");return`${dd}/${m}/${y}`};
+const num=v=>v===""||v==null||isNaN(+v)?null:+v;
+const avgOf=it=>{const r=Object.values(it.notas||{}).map(Number);return r.length?r.reduce((a,b)=>a+b,0)/r.length:null};
+const fmtN=n=>n==null?"–":(Math.round(n*10)/10).toString().replace(".",",");
+const initials=t=>String(t||"?").replace(/^(the|o|a|os|as)\s+/i,"").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+function posterHtml(title,path,kind,size="w185"){
+  const img=path&&/^\/[\w.-]+$/.test(path)?`<img src="${IMG}${size}${path}" alt="" loading="lazy" onerror="this.remove()">`:"";
+  return `<div class="poster ${kind||""}"><div class="ph" aria-hidden="true">${esc(initials(title))}</div>${img}</div>`;
+}
+function showNotice(t){const n=$("#notice");n.textContent=t||"";n.hidden=!t}
+$("#f-rMe").innerHTML='<option value="">—</option>'+Array.from({length:21},(_,i)=>(20-i)/2).map(v=>`<option value="${v}">${fmtN(v)}</option>`).join("");
+const nameOf=u=>members.find(m=>m.user_id===u)?.nome||"Ex-membro";
+const memberOrder=u=>{const i=members.findIndex(m=>m.user_id===u);return i<0?999:i};
+const joinNames=a=>a.map(n=>`<b>${esc(n)}</b>`).reduce((s,n,i,arr)=>i===0?n:s+(i===arr.length-1?" &amp; ":", ")+n,"");
+
+// ---------- render ----------
+function renderScore(){
+  const v=items.filter(i=>i.status==="visto"), cnt=k=>v.filter(i=>i.kind===k).length;
+  // quem dá nota acima da média dos outros, nos títulos com 2+ notas
+  let who="–";
+  if(members.length>1){
+    const dev={},n={};
+    for(const it of v){const ns=Object.entries(it.notas||{});if(ns.length<2)continue;
+      const m=ns.reduce((s,[,x])=>s+Number(x),0)/ns.length;
+      for(const[u,x]of ns){dev[u]=(dev[u]||0)+(Number(x)-m);n[u]=(n[u]||0)+1}}
+    const best=Object.keys(dev).map(u=>[u,dev[u]/n[u]]).sort((a,b)=>b[1]-a[1])[0];
+    if(best)who=best[1]<0.25?"Empate":nameOf(best[0])+" +"+fmtN(best[1]);
+  }
+  const avs=v.map(avgOf).filter(x=>x!=null), mean=avs.length?avs.reduce((a,b)=>a+b,0)/avs.length:null;
+  $("#score").innerHTML=`<div><div class="n">${v.length}</div><div class="l">Vistos juntos</div></div>
+   <div><div class="n">${cnt("filme")}·${cnt("serie")}·${cnt("anime")}</div><div class="l">Filme · série · anime</div></div>
+   <div><div class="n">${fmtN(mean)}</div><div class="l">Nota média da lista</div></div>
+   <div><div class="n" style="font-size:18px;padding-block:4px">${esc(who)}</div><div class="l">Quem dá nota maior</div></div>`;
+}
+function filtered(){
+  let r=items.filter(i=>i.status===tab&&(kindF==="todos"||i.kind===kindF)&&(!q||(i.title+" "+(i.original||"")).toLowerCase().includes(q)));
+  if(sort==="az")r.sort((a,b)=>a.title.localeCompare(b.title,"pt"));
+  else if(sort==="rating")r.sort((a,b)=>(avgOf(b)??-1)-(avgOf(a)??-1));
+  else r.sort((a,b)=>(b.watched_on||"").localeCompare(a.watched_on||"")||(b.updated_at||"").localeCompare(a.updated_at||""));
+  return r;
+}
+function ticket(it){
+  const a=avgOf(it), isEp=it.kind!=="filme";
+  let mid="";
+  if(it.status==="vendo"&&isEp) mid=`<div class="prog"><span class="lbl">Paramos em</span>
+      <span class="step"><button data-act="sDown" aria-label="Temporada anterior">−</button><span>T${it.season||1}</span><button data-act="sUp" aria-label="Próxima temporada">+</button></span>
+      <span class="step"><button data-act="eDown" aria-label="Episódio anterior">−</button><span>E${it.episode||0}</span><button data-act="eUp" aria-label="Próximo episódio">+</button></span></div>`;
+  if(it.status==="visto"){
+    const ns=Object.entries(it.notas||{}).sort((x,y)=>memberOrder(x[0])-memberOrder(y[0]));
+    mid=`<div class="rates">${ns.map(([u,n])=>`<span>${esc(nameOf(u))} <b>${fmtN(n)}</b></span>`).join("")}${!ns.length?`<span style="color:var(--muted)">Sem notas ainda</span>`:""}${it.watched_on?`<span class="mono" style="color:var(--muted)">${fmtDate(it.watched_on)}</span>`:""}</div>`;
+  }
+  let acts;
+  if(confirmDel===it.id) acts=`<div class="confirm">Remover “${esc(it.title)}”? <button class="btn danger" data-act="delYes">Remover</button><button class="btn ghost" data-act="delNo">Cancelar</button></div>`;
+  else{
+    const nx=it.status==="quero"?`<button class="btn" data-act="${isEp?"start":"finish"}">${isEp?"Começar":"Vimos!"}</button>`:it.status==="vendo"?`<button class="btn" data-act="finish">Terminamos</button>`:"";
+    acts=`${nx}<button class="btn ghost" data-act="edit">Editar</button><button class="btn ghost" data-act="del">Remover</button>`;
+  }
+  const orig=it.original&&it.original.toLowerCase()!==it.title.toLowerCase()?`<span>${esc(it.original)}</span>`:"";
+  return `<article class="ticket ${it.kind}" data-id="${esc(it.id)}">${posterHtml(it.title,it.poster_path,it.kind,"w342")}<div class="body">
+    <div class="top"><div style="min-width:0"><h3 class="tt">${esc(it.title)}</h3>
+      <div class="meta"><span class="kind">${KIND[it.kind]}</span>${it.year?`<span class="mono">${it.year}</span>`:""}${orig}</div></div>
+      ${it.status==="visto"?`<div class="avg"><div class="n">${fmtN(a)}</div><div class="l">média</div></div>`:""}</div>
+    ${mid}${it.note?`<p class="note">${esc(it.note)}</p>`:""}<div class="actions">${acts}</div></div></article>`;
+}
+function render(){
+  renderScore();
+  for(const s of["vendo","quero","visto"])$("#c-"+s).textContent=items.filter(i=>i.status===s).length||"";
+  $$("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.s===tab));
+  $$(".chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===kindF));
+  const r=filtered();
+  if(!r.length){
+    $("#list").innerHTML=`<div class="empty">${items.length===0?`<strong>A lista de vocês está vazia</strong>Toque em “+ Adicionar” e comece a digitar o nome de um filme, série ou anime.`:
+      tab==="vendo"?`<strong>Nada em andamento</strong>Quando começarem uma série ou anime, ela aparece aqui com o episódio onde pararam.`:
+      tab==="quero"?`<strong>Fila vazia</strong>Adicione o que vocês querem ver juntos.`:`<strong>Nada por aqui</strong>Nenhum título com esses filtros.`}</div>`;return;
+  }
+  $("#list").innerHTML=r.map(ticket).join("");
+}
+
+// ---------- dados (Supabase) ----------
+const COLS=["id","lista_id","title","original","kind","status","year","tmdb_id","tmdb_type","poster_path","season","episode","watched_on","note"];
+async function load(){
+  if(!cur||!me)return;
+  const lista=cur;
+  const [t,n,m]=await Promise.all([
+    sb.from("titles").select("*").eq("lista_id",lista),
+    sb.from("notas").select("title_id,user_id,nota").eq("lista_id",lista),
+    sb.from("membros").select("user_id,nome,dono,entrou_em").eq("lista_id",lista).order("entrou_em")]);
+  if(lista!==cur)return;
+  const err=t.error||n.error||m.error;
+  if(err){showNotice("Não deu para carregar a lista: "+err.message);return}
+  members=m.data||[];
+  if(!members.some(x=>x.user_id===me.id)){unsubscribe();cur=null;return boot()} // saiu ou foi removido
+  const byT={};for(const r of n.data||[])(byT[r.title_id]??={})[r.user_id]=Number(r.nota);
+  items=(t.data||[]).map(x=>({...x,notas:byT[x.id]||{}}));
+  if(firstLoad){firstLoad=false;if(!items.some(i=>i.status===tab)){const s=["vendo","visto","quero"].find(s=>items.some(i=>i.status===s));if(s)tab=s}}
+  showNotice("");renderHeader();render();
+}
+// minhaNota: undefined = não mexe; null = apaga; número = salva
+async function save(it,minhaNota){
+  const row={};for(const k of COLS)if(k in it)row[k]=it[k];
+  row.lista_id=row.lista_id||cur;if(!row.id)delete row.id;
+  const res=row.id?await sb.from("titles").update(row).eq("id",row.id).select("id").single():await sb.from("titles").insert(row).select("id").single();
+  if(res.error){showNotice("Não deu para salvar: "+res.error.message);return load()}
+  if(minhaNota!==undefined){
+    const tid=res.data.id;
+    const r2=minhaNota==null?await sb.from("notas").delete().eq("title_id",tid).eq("user_id",me.id)
+      :await sb.from("notas").upsert({title_id:tid,user_id:me.id,lista_id:row.lista_id,nota:minhaNota});
+    if(r2.error)showNotice("Não deu para salvar sua nota: "+r2.error.message);
+  }
+  await load();
+}
+async function remove(id){const {error}=await sb.from("titles").delete().eq("id",id);if(error)showNotice("Não deu para remover: "+error.message);await load()}
+let channel=null;
+function unsubscribe(){if(channel){sb.removeChannel(channel);channel=null}}
+function subscribe(){
+  unsubscribe();if(!cur)return;
+  let t;const re=()=>{clearTimeout(t);t=setTimeout(load,300)};
+  const f="lista_id=eq."+cur;
+  channel=sb.channel("lista-"+cur);
+  for(const table of["titles","notas","membros"])
+    channel.on("postgres_changes",{event:"INSERT",schema:"public",table,filter:f},re)
+           .on("postgres_changes",{event:"UPDATE",schema:"public",table,filter:f},re);
+  // exclusões chegam só com a chave; confere se é desta lista
+  channel.on("postgres_changes",{event:"DELETE",schema:"public",table:"titles"},p=>{if(items.some(i=>i.id===p.old?.id))re()})
+         .on("postgres_changes",{event:"DELETE",schema:"public",table:"notas"},p=>{if(items.some(i=>i.id===p.old?.title_id))re()})
+         .on("postgres_changes",{event:"DELETE",schema:"public",table:"membros"},p=>{if(p.old?.lista_id===cur)re()})
+         .subscribe();
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!$("#appView").hidden)load()});
+
+// ---------- TMDB ----------
+async function tmdb(path,params,signal){
+  const u=new URL("https://api.themoviedb.org/3"+path);
+  Object.entries({language:"pt-BR",...params}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r=await fetch(u,{headers:{Authorization:"Bearer "+CFG.TMDB_TOKEN,accept:"application/json"},signal});
+  if(!r.ok)throw new Error("TMDB "+r.status);
+  return r.json();
+}
+function toSug(x){
+  const isMovie=x.media_type==="movie";
+  const anime=(x.genre_ids||[]).includes(16)&&(x.original_language==="ja"||(x.origin_country||[]).includes("JP"));
+  const date=isMovie?x.release_date:x.first_air_date;
+  return {tmdb_id:x.id,tmdb_type:isMovie?"movie":"tv",title:isMovie?x.title:x.name,original:isMovie?x.original_title:x.original_name,
+    kind:anime?"anime":isMovie?"filme":"serie",year:date?+date.slice(0,4):null,poster_path:x.poster_path||null,pop:x.popularity||0};
+}
+
+// ---------- formulário ----------
+let fKind="filme", fStatus="visto", fLink=null; // fLink = dados do TMDB vinculados
+function setSeg(sel,v){$$(sel+" button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v))}
+function syncForm(){
+  setSeg("#f-kind",fKind);setSeg("#f-status",fStatus);
+  $$("[data-ep]").forEach(e=>e.hidden=fKind==="filme");
+  $$("[data-done]").forEach(e=>e.hidden=fStatus!=="visto");
+  $("#picked").hidden=!fLink;
+  if(fLink){$("#pPoster").outerHTML=posterHtml(fLink.title,fLink.poster_path,fKind).replace('class="poster','id="pPoster" class="poster');
+    $("#pInfo").innerHTML=`Vinculado ao TMDB<br><b style="color:var(--ink)">${esc(fLink.original||fLink.title)}</b>${fLink.year?` · ${fLink.year}`:""}`}
+}
+function openForm(it){
+  editing=it?{...it}:null;
+  $("#fTitle").textContent=it?.id?"Editar título":"Adicionar título";
+  $("#f-title").value=it?.title||"";
+  fKind=it?.kind||"filme";fStatus=it?.status||tab;
+  fLink=it?.tmdb_id?{tmdb_id:it.tmdb_id,tmdb_type:it.tmdb_type,title:it.title,original:it.original,year:it.year,poster_path:it.poster_path}:null;
+  $("#f-year").value=it?.year??"";$("#f-season").value=it?.season??"";$("#f-ep").value=it?.episode??"";
+  $("#f-rMe").value=it?.notas?.[me?.id]??"";
+  const outros=Object.entries(it?.notas||{}).filter(([u])=>u!==me?.id).sort((x,y)=>memberOrder(x[0])-memberOrder(y[0]));
+  $("#fOthers").textContent=outros.length?"Notas dos outros: "+outros.map(([u,n])=>`${nameOf(u)} ${fmtN(n)}`).join(" · "):"";
+  $("#f-date").value=it?.watched_on||(fStatus==="visto"?today():"");
+  $("#f-note").value=it?.note||"";$("#fErr").hidden=true;closeSugs();
+  syncForm();$("#sheet").hidden=false;setTimeout(()=>$("#f-title").focus(),30);
+}
+function closeForm(){$("#sheet").hidden=true;editing=null;closeSugs()}
+$("#f-kind").addEventListener("click",e=>{const b=e.target.closest("button");if(b){fKind=b.dataset.v;syncForm()}});
+$("#f-status").addEventListener("click",e=>{const b=e.target.closest("button");if(b){fStatus=b.dataset.v;if(fStatus==="visto"&&!$("#f-date").value)$("#f-date").value=today();syncForm()}});
+$("#pClear").onclick=()=>{fLink=null;syncForm()};
+$("#fCancel").onclick=closeForm;
+$("#sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeForm()});
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(!$("#sheet").hidden)closeForm();else if(!$("#listSheet").hidden)closeListSheet()});
+$("#form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const title=$("#f-title").value.trim();
+  if(!title){$("#fErr").textContent="Escreva o nome do título.";$("#fErr").hidden=false;return}
+  const done=fStatus==="visto", ep=fKind!=="filme";
+  const it={...(editing||{}),title,kind:fKind,status:fStatus,year:num($("#f-year").value),
+    original:fLink?.original||null,tmdb_id:fLink?.tmdb_id||null,tmdb_type:fLink?.tmdb_type||null,poster_path:fLink?.poster_path||null,
+    season:ep?num($("#f-season").value):null,episode:ep?num($("#f-ep").value):null,
+    watched_on:done?($("#f-date").value||null):null,note:$("#f-note").value.trim()||null};
+  if(it.status==="vendo"&&ep){it.season=it.season||1;it.episode=it.episode??0}
+  closeForm();tab=it.status;saveTab();render();
+  await save(it,done?num($("#f-rMe").value):undefined);
+});
+
+// ---------- sugestões enquanto digita (TMDB) ----------
+let sugCtl=null, sugT=null, sugs=[], sugIdx=-1;
+const tIn=$("#f-title"), box=$("#sugs");
+function closeSugs(){box.hidden=true;sugs=[];sugIdx=-1;tIn.setAttribute("aria-expanded","false");if(sugCtl){sugCtl.abort();sugCtl=null}}
+function drawSugs(){
+  box.innerHTML=sugs.map((s,i)=>`<button type="button" class="sug ${s.kind}" role="option" data-i="${i}" aria-selected="${i===sugIdx}">
+     ${posterHtml(s.title,s.poster_path,s.kind,"w92")}
+     <span style="min-width:0"><span class="st">${esc(s.title)}</span>${s.year?` <span class="mono so">${s.year}</span>`:""}
+     ${s.original&&s.original.toLowerCase()!==s.title.toLowerCase()?`<br><span class="so">${esc(s.original)}</span>`:""}</span>
+     <span class="sk">${KIND[s.kind]}</span></button>`).join("");
+  box.hidden=!sugs.length;tIn.setAttribute("aria-expanded",String(!box.hidden));
+}
+async function pickSug(s){
+  tIn.value=s.title;fKind=s.kind;fLink=s;
+  if(s.year)$("#f-year").value=s.year;
+  closeSugs();syncForm();
+  if(s.tmdb_type==="tv"&&fStatus==="visto"&&!$("#f-season").value){
+    try{const d=await tmdb("/tv/"+s.tmdb_id,{});if(d.number_of_seasons&&fLink===s)$("#f-season").value=d.number_of_seasons}catch(e){}
+  }
+}
+async function askSugs(query){
+  if(sugCtl)sugCtl.abort();
+  const ctl=new AbortController();sugCtl=ctl;
+  try{
+    const d=await tmdb("/search/multi",{query,include_adult:"false",page:"1"},ctl.signal);
+    if(ctl!==sugCtl)return;
+    sugs=(d.results||[]).filter(x=>x.media_type==="movie"||x.media_type==="tv").map(toSug).slice(0,7);
+    sugIdx=-1;
+    if(!sugs.length){box.innerHTML=`<div class="hint">Nada encontrado. Pode salvar só com o nome.</div>`;box.hidden=false;return}
+    drawSugs();
+  }catch(e){
+    if(e.name==="AbortError")return;
+    box.innerHTML=`<div class="hint">Busca indisponível agora (confira o TMDB_TOKEN no config.js).</div>`;box.hidden=false;
+  }
+}
+tIn.addEventListener("input",()=>{
+  clearTimeout(sugT);const v=tIn.value.trim();
+  if(fLink&&v!==fLink.title){fLink=null;syncForm()}
+  if(v.length<2){closeSugs();return}
+  sugT=setTimeout(()=>askSugs(v),250);
+});
+tIn.addEventListener("keydown",e=>{
+  if(box.hidden||!sugs.length)return;
+  if(e.key==="ArrowDown"){e.preventDefault();sugIdx=(sugIdx+1)%sugs.length;drawSugs()}
+  else if(e.key==="ArrowUp"){e.preventDefault();sugIdx=(sugIdx-1+sugs.length)%sugs.length;drawSugs()}
+  else if(e.key==="Enter"&&sugIdx>=0){e.preventDefault();pickSug(sugs[sugIdx])}
+  else if(e.key==="Escape"){e.stopPropagation();closeSugs()}
+});
+box.addEventListener("mousedown",e=>e.preventDefault());
+box.addEventListener("click",e=>{const b=e.target.closest(".sug");if(b)pickSug(sugs[+b.dataset.i])});
+tIn.addEventListener("blur",()=>setTimeout(closeSugs,150));
+
+// ---------- interações da lista ----------
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){tab=b.dataset.s;confirmDel=null;saveTab();render()}});
+$$(".chip").forEach(b=>b.onclick=()=>{kindF=b.dataset.k;render()});
+let qt;$("#q").addEventListener("input",e=>{clearTimeout(qt);qt=setTimeout(()=>{q=e.target.value.trim().toLowerCase();render()},120)});
+$("#sort").onchange=e=>{sort=e.target.value;render()};
+$("#btnAdd").onclick=()=>openForm(null);
+const pend={};
+$("#list").addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;
+  const id=b.closest(".ticket").dataset.id, it0=items.find(x=>x.id===id);if(!it0)return;
+  const it={...it0}, a=b.dataset.act;
+  if(a==="edit")return openForm(it0);
+  if(a==="del"){confirmDel=id;return render()}
+  if(a==="delNo"){confirmDel=null;return render()}
+  if(a==="delYes"){confirmDel=null;items=items.filter(x=>x.id!==id);render();return remove(id)}
+  if(a==="finish"){it.status="visto";it.watched_on=today();return openForm(it)}
+  if(a==="start"){it.status="vendo";it.season=it.season||1;it.episode=it.episode??0}
+  if(a==="eUp")it.episode=(it.episode||0)+1;
+  if(a==="eDown")it.episode=Math.max(0,(it.episode||0)-1);
+  if(a==="sUp"){it.season=(it.season||1)+1;it.episode=0}
+  if(a==="sDown")it.season=Math.max(1,(it.season||1)-1);
+  items[items.findIndex(x=>x.id===id)]=it;render();
+  clearTimeout(pend[id]);pend[id]=setTimeout(()=>save(it),a==="start"?0:600);
+});
+
+// ---------- listas e convites ----------
+const INV="sad-convite";let pendingInv=null;
+function getInvite(){try{return localStorage.getItem(INV)||pendingInv}catch(e){return pendingInv}}
+function setInvite(c){pendingInv=c||null;try{c?localStorage.setItem(INV,c):localStorage.removeItem(INV)}catch(e){}}
+const parseCode=v=>{const m=String(v||"").match(/convite=([A-Za-z0-9]+)/);return(m?m[1]:String(v||"")).replace(/[^A-Za-z0-9]/g,"").toUpperCase()};
+{const u=new URL(location.href),c=u.searchParams.get("convite");
+ if(c){setInvite(parseCode(c));u.searchParams.delete("convite");history.replaceState(null,"",u.pathname+u.search+u.hash)}}
+const inviteLink=L=>location.origin+location.pathname+"?convite="+L.convite;
+const curList=()=>lists.find(l=>l.id===cur);
+const defaultName=()=>{const md=me?.user_metadata||{};return String(md.full_name||md.name||(me?.email||"").split("@")[0]||"").split(" ")[0].slice(0,40)};
+
+function view(v){
+  $("#loginView").hidden=v!=="login";$("#startView").hidden=v!=="start";$("#appView").hidden=v!=="app";
+  if(v!=="app")closeListSheet();
+  if(v==="login")$("#lSub").textContent=getInvite()?"Você recebeu um convite. Entre com o Google para aceitar.":"Entre com a sua conta do Google.";
+}
+function sErr(m){$("#sErr").textContent=m||"";$("#sErr").hidden=!m}
+function renderHeader(){
+  const L=curList();$("#hName").textContent=L?L.nome:"Sessão a Dois";
+  $("#hSub").innerHTML=!members.length?"":members.length>1?`O que ${joinNames(members.map(m=>m.nome))} já assistiram juntos.`
+    :`Só você por aqui. <button class="linkbtn" id="hInvite" type="button">Convide alguém</button>`;
+}
+$("#hSub").addEventListener("click",e=>{if(e.target.id==="hInvite")openListSheet()});
+$("#btnList").onclick=()=>openListSheet();
+
+async function fetchLists(){
+  const {data,error}=await sb.from("membros").select("lista_id,nome,dono,listas(nome,convite)").eq("user_id",me.id).order("entrou_em");
+  if(error)throw error;
+  lists=(data||[]).filter(r=>r.listas).map(r=>({id:r.lista_id,nome:r.listas.nome,convite:r.listas.convite,dono:r.dono,meuNome:r.nome}));
+}
+async function boot(){
+  try{await fetchLists()}catch(e){startCommon();sErr("Não deu para carregar suas listas: "+e.message);return}
+  const inv=getInvite();
+  if(inv)return showJoin(inv);
+  if(!lists.length)return showStart();
+  let saved=null;try{saved=localStorage.getItem("sad-lista")}catch(e){}
+  openList(lists.some(l=>l.id===saved)?saved:lists[0].id);
+}
+function openList(id){
+  cur=id;try{localStorage.setItem("sad-lista",id)}catch(e){}
+  items=[];members=[];firstLoad=true;confirmDel=null;showNotice("");
+  view("app");renderHeader();render();load();subscribe();
+}
+function startCommon(){view("start");sErr("");if(!$("#s-me").value)$("#s-me").value=defaultName();$("#sBack").hidden=!lists.length}
+function showStart(){startCommon();$("#joinBox").hidden=true;$("#createBox").hidden=false}
+async function showJoin(code){
+  startCommon();$("#createBox").hidden=true;$("#joinBox").hidden=false;
+  $("#jText").textContent="Abrindo convite…";$("#jBtn").disabled=true;
+  const {data,error}=await sb.rpc("ver_convite",{p_convite:code});
+  const L=data&&data[0];
+  if(error||!L){setInvite(null);showStart();sErr("Esse convite não vale mais. Peça um link novo a quem te convidou.");return}
+  if(L.ja_sou){setInvite(null);await fetchLists().catch(()=>{});return openList(L.id)}
+  $("#jText").innerHTML=`Você foi convidado para a lista <b>${esc(L.nome)}</b> (${L.qtd} ${L.qtd===1?"pessoa":"pessoas"}).`;
+  $("#jBtn").disabled=false;$("#jBtn").dataset.code=code;
+}
+const myNameInput=()=>{const n=$("#s-me").value.trim();if(!n){sErr("Escreva seu nome.");$("#s-me").focus();return null}return n};
+$("#jBtn").onclick=async()=>{
+  const n=myNameInput();if(!n)return;sErr("");$("#jBtn").disabled=true;
+  const {data,error}=await sb.rpc("entrar_na_lista",{p_convite:$("#jBtn").dataset.code,p_meu_nome:n});
+  $("#jBtn").disabled=false;
+  if(error){sErr(error.message);return}
+  setInvite(null);await fetchLists().catch(()=>{});openList(data);
+};
+$("#jNo").onclick=()=>{setInvite(null);lists.length?boot():showStart()};
+$("#cBtn").onclick=async()=>{
+  const n=myNameInput();if(!n)return;
+  const ln=$("#s-list").value.trim();if(!ln){sErr("Dê um nome para a lista.");$("#s-list").focus();return}
+  sErr("");$("#cBtn").disabled=true;
+  const {data,error}=await sb.rpc("criar_lista",{p_nome:ln,p_meu_nome:n});
+  $("#cBtn").disabled=false;
+  if(error){sErr("Não deu para criar a lista: "+error.message);return}
+  $("#s-list").value="";await fetchLists().catch(()=>{});openList(data);
+};
+$("#cJoin").onclick=()=>{const c=parseCode($("#s-code").value);if(!c){sErr("Cole o link ou o código do convite.");return}$("#s-code").value="";setInvite(c);showJoin(c)};
+$("#sBack").onclick=()=>{setInvite(null);boot()};
+
+// ---------- painel "Lista e convite" ----------
+function openListSheet(){confirmKick=null;confirmLeave=false;drawListSheet();$("#listSheet").hidden=false}
+function closeListSheet(){$("#listSheet").hidden=true}
+function drawListSheet(){
+  const L=curList();if(!L)return;
+  const share=navigator.share?"Compartilhar":"Copiar";
+  $("#lsBody").innerHTML=`
+   <div class="field"><label for="ls-sel">Lista atual</label><select id="ls-sel">${lists.map(l=>`<option value="${esc(l.id)}"${l.id===cur?" selected":""}>${esc(l.nome)}</option>`).join("")}<option value="__new">+ Criar ou entrar em outra lista</option></select></div>
+   ${L.dono?`<div class="field"><label for="ls-name">Nome da lista</label><input id="ls-name" maxlength="60" value="${esc(L.nome)}"></div>`:""}
+   <div class="field"><label for="ls-me">Seu nome nesta lista</label><input id="ls-me" maxlength="40" value="${esc(L.meuNome)}"></div>
+   <div class="field"><span class="lbl">Quem está na lista</span><ul class="mem">${members.map(m=>`<li><span>${esc(m.nome)}${m.user_id===me.id?" (você)":""}${m.dono?'<span class="tag">criou</span>':""}</span>${
+      L.dono&&m.user_id!==me.id?(confirmKick===m.user_id?`<span class="confirm">Remover ${esc(m.nome)}? <button class="btn danger" type="button" data-kick-yes="${esc(m.user_id)}">Remover</button><button class="btn ghost" type="button" data-kick-no="1">Cancelar</button></span>`
+      :`<button class="btn ghost" type="button" data-kick="${esc(m.user_id)}">Remover</button>`):""}</li>`).join("")}</ul></div>
+   <div class="field"><span class="lbl">Convidar</span>
+     <p class="sub" style="margin:0">Mande este link. Quem abrir e entrar com o Google passa a ver e editar a lista.</p>
+     <div class="inv"><input id="ls-link" readonly value="${esc(inviteLink(L))}" aria-label="Link de convite"><button class="btn primary" type="button" id="ls-share">${share}</button></div>
+     ${L.dono?`<button class="btn ghost" type="button" id="ls-reset" style="align-self:flex-start">Gerar link novo (o atual para de funcionar)</button>`:""}</div>
+   <p class="err" id="lsErr" hidden></p>
+   <div class="foot">${confirmLeave?`<span class="confirm">Sair de “${esc(L.nome)}”?${members.length<=1?" A lista será apagada.":""} <button class="btn danger" type="button" id="ls-leave-yes">Sair</button><button class="btn ghost" type="button" id="ls-leave-no">Cancelar</button></span>`
+     :`<button class="btn ghost danger" type="button" id="ls-leave">Sair da lista</button><button class="btn" type="button" id="ls-close">Fechar</button>`}</div>`;
+}
+const lsErr=m=>{const e=$("#lsErr");if(e){e.textContent=m||"";e.hidden=!m}};
+$("#listSheet").addEventListener("click",async e=>{
+  if(e.target.id==="listSheet")return closeListSheet();
+  const t=e.target.closest("button");if(!t)return;
+  const L=curList();if(!L)return;
+  if(t.id==="ls-close")return closeListSheet();
+  if(t.id==="ls-share"){
+    const link=$("#ls-link").value;
+    if(navigator.share){try{await navigator.share({title:"Sessão a Dois",text:`Entra na lista “${L.nome}” no Sessão a Dois`,url:link})}catch(x){}return}
+    try{await navigator.clipboard.writeText(link);t.textContent="Copiado!";setTimeout(()=>{t.textContent="Copiar"},1500)}catch(x){$("#ls-link").select()}
+    return;
+  }
+  if(t.id==="ls-reset"){const {error}=await sb.rpc("novo_convite",{p_lista:cur});if(error)return lsErr(error.message);await fetchLists().catch(()=>{});return drawListSheet()}
+  if(t.dataset.kick){confirmKick=t.dataset.kick;return drawListSheet()}
+  if(t.dataset.kickNo){confirmKick=null;return drawListSheet()}
+  if(t.dataset.kickYes){
+    const {error}=await sb.rpc("remover_membro",{p_lista:cur,p_user:t.dataset.kickYes});confirmKick=null;
+    if(error)return lsErr(error.message);
+    await fetchLists().catch(()=>{});await load();return drawListSheet();
+  }
+  if(t.id==="ls-leave"){confirmLeave=true;return drawListSheet()}
+  if(t.id==="ls-leave-no"){confirmLeave=false;return drawListSheet()}
+  if(t.id==="ls-leave-yes"){
+    const {error}=await sb.rpc("sair_da_lista",{p_lista:cur});if(error)return lsErr(error.message);
+    closeListSheet();unsubscribe();cur=null;try{localStorage.removeItem("sad-lista")}catch(x){}
+    return boot();
+  }
+});
+$("#listSheet").addEventListener("change",async e=>{
+  const L=curList();if(!L)return;const id=e.target.id,v=e.target.value.trim();
+  if(id==="ls-sel"){closeListSheet();if(v==="__new")return showStart();if(v!==cur)openList(v);return}
+  if(id==="ls-name"&&v&&v!==L.nome){const {error}=await sb.from("listas").update({nome:v}).eq("id",cur);if(error)return lsErr(error.message);L.nome=v;renderHeader()}
+  if(id==="ls-me"&&v&&v!==L.meuNome){const {error}=await sb.from("membros").update({nome:v}).eq("lista_id",cur).eq("user_id",me.id);if(error)return lsErr(error.message);L.meuNome=v;load()}
+});
+
+// ---------- login (Google) ----------
+let started=false;
+function loginErr(msg){$("#lErr").textContent=msg;$("#lErr").hidden=!msg}
+$("#lBtn").onclick=async()=>{
+  loginErr("");$("#lBtn").disabled=true;
+  const {error}=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname,queryParams:{prompt:"select_account"}}});
+  if(error){$("#lBtn").disabled=false;loginErr("Não deu para abrir o login do Google. Tente de novo.")}
+};
+function checkSession(session){
+  if(!session){me=null;started=false;view("login");return}
+  if(started&&me?.id===session.user.id)return;
+  started=true;me=session.user;
+  if(location.hash.includes("access_token"))history.replaceState(null,"",location.pathname+location.search);
+  boot();
+}
+async function logout(){
+  await sb.auth.signOut();unsubscribe();
+  items=[];members=[];lists=[];cur=null;me=null;started=false;$("#lBtn").disabled=false;view("login");
+}
+$("#btnOut").onclick=logout;$("#sOut").onclick=logout;
+render();
+sb.auth.getSession().then(({data})=>checkSession(data.session));
+sb.auth.onAuthStateChange((ev,session)=>{if(ev==="SIGNED_IN")setTimeout(()=>checkSession(session),0)});
+})();
+</script>
+</body>
+</html>
