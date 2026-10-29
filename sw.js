@@ -1,7 +1,7 @@
 // Service worker do Sessão a Dois: deixa o app instalável e abre mesmo sem internet.
 // Ao mudar index.html/config.js não precisa mexer aqui (as páginas vêm sempre da rede primeiro).
 // Só troque VERSAO se mudar a lista de arquivos abaixo.
-const VERSAO = "sad-v1";
+const VERSAO = "sad-v2";
 const SHELL = ["./", "index.html", "config.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"];
 const CDN = ["fonts.googleapis.com", "fonts.gstatic.com", "cdn.jsdelivr.net"];
