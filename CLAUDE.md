@@ -24,5 +24,6 @@ App web para controlar filmes, séries e animes assistidos em grupo (começou pa
 ## Regras
 - Anime = TMDB com gênero 16 (Animação) e idioma original `ja` ou país `JP`.
 - Interface em português; layout estilo "ingresso", tema claro/escuro, funciona no celular.
+- Abertura (`#splash`): logo + nome por ~2s ao carregar, some com fade.
 - Manter crédito ao TMDB no rodapé (exigência dos termos).
 - Supabase grátis pausa após ~1 semana sem uso → "Restore project" no painel.
