@@ -49,7 +49,7 @@ Abra `config.js` e cole a Project URL em `SUPABASE_URL`, a chave anon/publishabl
 
 ## 5. Publicar no GitHub Pages
 
-1. Crie um repositório no GitHub, por exemplo `sessao-a-dois`, e suba `index.html`, `config.js`, `manifest.webmanifest`, `sw.js`, `privacidade.html` e a pasta `icons/` (o `schema.sql` e o README podem ir junto, não têm nada secreto).
+1. Crie um repositório no GitHub, por exemplo `sessao-a-dois`, e suba `index.html`, `config.js`, `manifest.webmanifest`, `sw.js`, `privacidade.html` e a pasta `icones/` (o `schema.sql` e o README podem ir junto, não têm nada secreto).
 2. Vá em **Settings → Pages → Source: Deploy from a branch**, escolha `main` / `(root)` e salve.
 3. Em 1 ou 2 minutos o site fica em `https://lucaslapenne-ctrl.github.io/sessao-a-dois/`.
 4. Instale como app (veja abaixo).

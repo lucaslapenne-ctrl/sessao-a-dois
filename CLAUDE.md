@@ -11,7 +11,7 @@ App web para controlar filmes, séries e animes assistidos em grupo (começou pa
 ## Arquivos
 - `index.html` — app inteiro
 - `config.js` — chaves
-- `manifest.webmanifest`, `sw.js`, `icons/` — PWA (instalável, abre offline). `sw.js`: rede primeiro para arquivos do app, cache para fontes/CDN e capas do TMDB, nunca cacheia Supabase/Google/API do TMDB. Ícones: casal no cinema com coração (vieram prontos em files.zip; fundo roxo #1C0A1F).
+- `manifest.webmanifest`, `sw.js`, `icones/` (a antiga `icons/` não é mais usada) — PWA (instalável, abre offline). `sw.js`: rede primeiro para arquivos do app, cache para fontes/CDN e capas do TMDB, nunca cacheia Supabase/Google/API do TMDB. Ícones: casal no cinema com coração (vieram prontos em files.zip; fundo roxo #1C0A1F).
 - `schema.sql` — estrutura do banco, idempotente (rodar no SQL Editor do Supabase)
 - `README.md` — passo a passo de configuração e publicação
 
