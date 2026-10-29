@@ -55,11 +55,22 @@ create table if not exists public.notas (
   title_id    uuid not null references public.titles(id) on delete cascade,
   user_id     uuid not null default auth.uid() references auth.users(id) on delete cascade,
   lista_id    uuid not null references public.listas(id) on delete cascade,
-  nota        numeric(3,1) not null check (nota between 0 and 10),
+  nota        numeric(3,2) not null check (nota between 0 and 5),
   updated_at  timestamptz not null default now(),
   primary key (title_id, user_id)
 );
 create index if not exists notas_lista on public.notas(lista_id);
+
+-- Escala antiga (0 a 10, passo 0,5) -> nova (0 a 5, passo 0,25): divide as notas por 2.
+-- Só roda uma vez: depois da conversão a coluna fica com 2 casas e o bloco é ignorado.
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='notas'
+             and column_name='nota' and numeric_scale=1) then
+    alter table public.notas drop constraint if exists notas_nota_check;
+    alter table public.notas alter column nota type numeric(3,2) using round(nota / 2, 2);
+    alter table public.notas add constraint notas_nota_check check (nota between 0 and 5);
+  end if;
+end $$;
 
 -- ---------- quem é membro de quê ----------
 create or replace function public.eh_membro(p_lista uuid) returns boolean

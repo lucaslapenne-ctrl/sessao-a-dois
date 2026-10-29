@@ -49,10 +49,20 @@ Abra `config.js` e cole a Project URL em `SUPABASE_URL`, a chave anon/publishabl
 
 ## 5. Publicar no GitHub Pages
 
-1. Crie um repositório no GitHub, por exemplo `sessao-a-dois`, e suba `index.html` e `config.js` (o `schema.sql` e o README podem ir junto, não têm nada secreto).
+1. Crie um repositório no GitHub, por exemplo `sessao-a-dois`, e suba `index.html`, `config.js`, `manifest.webmanifest`, `sw.js`, `privacidade.html` e a pasta `icons/` (o `schema.sql` e o README podem ir junto, não têm nada secreto).
 2. Vá em **Settings → Pages → Source: Deploy from a branch**, escolha `main` / `(root)` e salve.
 3. Em 1 ou 2 minutos o site fica em `https://lucaslapenne-ctrl.github.io/sessao-a-dois/`.
-4. No celular, abra o link e use "Adicionar à tela de início" para ele parecer um app.
+4. Instale como app (veja abaixo).
+
+## 6. Instalar como app no celular
+
+O site é um PWA: instalado, ganha ícone na tela, abre em tela cheia sem a barra do navegador e continua abrindo mesmo sem internet (a lista atualiza quando a conexão volta).
+
+- **Android (Chrome):** abra o link e toque em **Instalar o app** no rodapé (ou no aviso que o Chrome mostra). Se não aparecer, menu ⋮ → **Instalar app**.
+- **iPhone (Safari):** abra o link no Safari, toque em **Compartilhar** → **Adicionar à Tela de Início**. Só funciona pelo Safari.
+- **Computador (Chrome/Edge):** ícone de instalar na barra de endereço.
+
+Ao publicar uma versão nova do `index.html`, o app instalado pega a atualização sozinho na próxima vez que abrir com internet. Só é preciso trocar `VERSAO` no `sw.js` se mudar a lista de arquivos que ele guarda.
 
 ## Como usar
 
